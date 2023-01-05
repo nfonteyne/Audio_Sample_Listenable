@@ -2,13 +2,14 @@
 
 Comment utiliser l'application "prediction" : 
 
--installer les librairies suivantes : 
-  -numpy
-  -librosa
-  -tensorflow
-  -tqdm
-  -os
-  
+
+
+## Install dependencies with
+
+```
+$pip install -r requirements.txt
+```
+
 Mettre les fichier dont vous voulez tester l'écoutabilité dans le fichier "Sound_files"
 
 éxécuter avec python le fichier Prediction.py
