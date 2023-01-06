@@ -9,23 +9,23 @@ from tensorflow import keras
 import streamlit as st
 
 
-def save_uploadedfile(uploadedfile):
+def save_uploadedfile(uploadedfile): #Fonction appelée pour s'assurer du bon format du fichier audio
     with open(os.path.join("./Sound_File/", uploadedfile.name), "wb") as f:
         f.write(uploadedfile.getbuffer())
     return st.success("Saved File:{} to Data".format(uploadedfile.name))
 
 def main():
-    model = keras.models.load_model('my_model')
-    feature_list = []
+    model = keras.models.load_model('my_model') #Charger le modèle keras
+    feature_list = [] #Création des listes utilisées pour la prediction
     Name_list=[]
 
     st.title('Bienvenue sur l\'application prediction !')
     st.text("Ici vous pourrez uploader des sons sous format .wav qui seront directement notés")
     st.text(" par notre algorithme.")
 
-    Files=st.file_uploader("Uploadez vos ficher en .wav :",accept_multiple_files=True)
+    Files=st.file_uploader("Uploadez vos ficher en .wav :",accept_multiple_files=True) #Création du système de drop&drag
     
-    if Files is not None:
+    if Files is not None: #fonction pour s'assurer qu'il y ait bien des fichiers selectionnées pour l'utilisateur
         for file in Files:
             save_uploadedfile(file)
 
@@ -34,29 +34,28 @@ def main():
 
 
     print('Preparing feature dataset and labels.')
-    for file in tqdm(os.listdir('./Sound_File')):
-        # Skip if it's not a wav file
-        if not file.endswith('.wav'):
+    for file in tqdm(os.listdir('./Sound_File')): #iteration à travers les fichiers dans le dossier sound_file
+        # Skip si ce n'est pas un fichier wav
+        if not file.endswith('.wav'): 
             continue
-        # Load audio and stretch it to length 1s
-        
+        # charge l'audio et l'étend à 1 seconde
         audio_path = os.path.join('./Sound_File/', file)
         
         audio, sr = librosa.load(path=audio_path, sr=None)
         audio = librosa.effects.time_stretch(y=audio, rate=len(audio)/sr)
         # Calculate features and get the label from the filename
-        mels = librosa.feature.melspectrogram(y=audio, sr=sr, n_fft=2048, hop_length=512)
+        mels = librosa.feature.melspectrogram(y=audio, sr=sr, n_fft=2048, hop_length=512) #création du melspectrogram
         mels_db = librosa.power_to_db(S=mels, ref=1.0)
-        if mels_db.shape == (128,87):
+        if mels_db.shape == (128,87): #on s'assure que chaque feature a les mêmes dimensions
             feature_list.append(mels_db.reshape((128, 87, 1)))
             Name_list.append(file)
 
-    if(len(feature_list)!=0):
-        features = np.array(feature_list)   
-        x=model.predict(features)
+    if(len(feature_list)!=0): #on lance la prediction si il y a des éléments à prédire
+        features = np.array(feature_list) 
+        x=model.predict(features) #commande de prediction : renvoie un nombre entre 0 et 1 pour chaques sons
         for i in range(len(x)):
         
-            if(x[i][0]>0.5):
+            if(x[i][0]>0.5): #si note > 0.5 : son écoutable et vice versa
                 st.text(body=('le son ',Name_list[i],' est écoutable'))
                 print(i," : ", "son écoutable")
             else:
@@ -69,15 +68,14 @@ def main():
 
 
     
-    if st.button('Supprimer les fichier'):
+    if st.button('Supprimer les fichier'): #bouton pour supprimer les fichiers dans le dossier sound file
         for file in tqdm(os.listdir('./Sound_File')):
             if file == None:
                 continue
             audio_path = os.path.join('./Sound_File/', file)
             os.remove(audio_path)
 
-    #Now that we've computed the prediction, we will create a website using streamlit to make predicting sounds easy
-
+    
     
 
 
