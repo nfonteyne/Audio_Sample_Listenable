@@ -20,7 +20,7 @@ class TestPreprocessingDataset(unittest.TestCase):
         """
         base = utils.PreprocessingDataset(sound_path='preprocessing/test_data/audio_files', marks_path='preprocessing/test_data/marks/test_marks.xlsx')
         base.get_mel_spectrogram()
-        expected = (14,128,87,1)
+        expected = (18,128,87,1)
         self.assertEqual(base.feature_list.shape,expected)
 
 
@@ -30,7 +30,7 @@ class TestPreprocessingDataset(unittest.TestCase):
         """
         base = utils.PreprocessingDataset(sound_path='preprocessing/test_data/audio_files', marks_path='preprocessing/test_data/marks/test_marks.xlsx')
         base.get_mel_spectrogram()
-        expected = (14,)
+        expected = (18,)
         print(base.label_list)
         self.assertEqual(base.label_list.shape,np.array(expected))
 
@@ -52,8 +52,9 @@ class TestPreprocessingDataset(unittest.TestCase):
         """
         base = utils.PreprocessingDataset(sound_path='preprocessing/test_data/audio_files', marks_path='preprocessing/test_data/marks/test_marks.xlsx')
         base.get_mel_spectrogram()
-        expected = (14,128,87)
+        expected = (18,128,87)
         self.assertEqual(base.matrix.shape,expected)
+    
 
 
     def test_get_target(self):
@@ -69,4 +70,14 @@ class TestPreprocessingDataset(unittest.TestCase):
         })
         expected['mediane'] = pd.to_numeric(expected['mediane'], downcast='integer')
         pd.testing.assert_frame_equal(base.dataset,expected)
+
+    
+    def test_X_y_same_lenght(self):
+        """
+        Test if X and y are the same lenght
+        """
+        base = utils.PreprocessingDataset(sound_path='preprocessing/test_data/audio_files', marks_path='preprocessing/test_data/marks/test_marks.xlsx')
+        X = base.matrix
+        y = base.dataset['bool_audible']
+        self.assertEqual(X.shape[0],y.shape[0])
     
