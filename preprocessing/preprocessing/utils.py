@@ -72,9 +72,10 @@ class PreprocessingDataset:
             if self.listMel[i].shape == (128, 87):
                 self.matrix[i]=self.listMel[i]
 
+
     def get_target(self):
         """
-        Get labels list and transform it into target
+        Compute model's target
         """
         ds = pd.read_csv(self.marks_path,sep=self.separator)
         ds['nomSon'] = ds['nomSon'].str.replace(r"[-;]", '',regex =True).astype(int)
@@ -85,6 +86,7 @@ class PreprocessingDataset:
         ds['MedianeBin'] = [0 if i<1 else 1 for i in ds.Mediane]
         ds.Mediane = [0 if i==-2 else 1 if i==-1 else 2 if i==0 else 3 if i==1 else 4 for i in ds.Mediane]
         self.dataset = ds     
+
 
     def run(self):
         """

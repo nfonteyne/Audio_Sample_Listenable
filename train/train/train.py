@@ -11,6 +11,42 @@ from tensorflow import keras
 
 def train(sound_path : str, marks_path : str,  metrics : str, test_size=0.2, separator=';'):
 
+    def get_data():
+
+        def get_sheet(file_path : str, sheet_name : str) -> pd.DataFrame():
+            """
+            Get excel sheet into a pandas dataframe and keeps only 'filename' and 'mediane' columns
+            """
+            sheet = pd.read_excel(file_path, sheet_name = sheet_name)
+            sheet = sheet[[sheet_name, "Médiane", "Moyenne"]]
+            sheet.columns = ["filename", "mediane", 'moyenne']
+            return sheet
+        
+        sheet0 = get_sheet(file_path='fake', sheet_name='Sample 0000')
+        sheet1 = get_sheet(file_path='fake', sheet_name='Sample 0001')
+        sheet2 = get_sheet(file_path='fake', sheet_name='Sample 0002')
+        sheet3 = get_sheet(file_path='fake', sheet_name='Sample 0003')
+        sheet4 = get_sheet(file_path='fake', sheet_name='Sample 0004')
+        sheet5 = get_sheet(file_path='fake', sheet_name='Sample 0005')
+        sheet6 = get_sheet(file_path='fake', sheet_name='Sample 0006')
+        sheet7 = get_sheet(file_path='fake', sheet_name='Sample 0007')
+        sheet8 = get_sheet(file_path='fake', sheet_name='Sample 0008')
+        sheet9 = get_sheet(file_path='fake', sheet_name='Sample 0009')
+
+        full_df = pd.concat([sheet0, sheet1, sheet2, sheet3, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9], ignore_index=True)
+        
+        full_df["bool_audible"] = [1 if i > 0 else 0 for i in full_df.mediane]
+
+        full_df = full_df.replace({'mediane':{-2:0, -1.5:0, -1:1, -0.5:1, 0:2, 0.5:3, 1:3, 1.5:3, 2:4}})
+        full_df['mediane'] = pd.to_numeric(full_df['mediane'], downcast='integer')
+        
+        full_df['filename'] = full_df['filename'].str.replace(r'-;$', '.wav')
+        full_df['filename'] = full_df['filename'].str.replace(r'-$', '.wav')
+        full_df['filename'] = full_df['filename'].map(lambda x: str(x)[1:])
+
+        full_df.to_csv("Sample.csv", index=False)
+
+
     preprocessed_data = PreprocessingDataset(sound_path=sound_path,
                                             marks_path=marks_path,
                                             separator=separator)
