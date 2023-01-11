@@ -12,7 +12,7 @@ from tensorflow import keras
 
 
 
-def train(sound_path : str, marks_path : str, train_conf : dict):
+def train(sound_path : str, marks_path : str, train_conf : dict, model_path : str):
     """
     Train model
     """
@@ -79,4 +79,4 @@ if __name__ == "__main__":
             'BATCH_SIZE' : 25,
             'EPOCHS' : 20}
 
-    train(sound_path='train/training_data/audio', marks_path='train/training_data/marks/Notes_des_sons.xlsx', train_conf=params)
+    train(sound_path='train/training_data/audio', marks_path='train/training_data/marks/Notes_des_sons.xlsx', train_conf=params, model_path='prediction_streamlit/models')
