@@ -16,6 +16,10 @@ def train(sound_path : str, marks_path : str, train_conf : dict, model_path : st
     Train a Convolutional Neural Network model
 
     The model will be saved at ./prediction_streamlit/models
+
+    If you run the model with Visual Studio code chances are that the program has dificulties to import 'preprocessing' module.
+    You can bypass this error by running an unittest directly on the training data.
+    Go in test_train.py for further informations.
     """
 
     # Get preprocessed dataset

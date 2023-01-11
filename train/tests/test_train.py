@@ -24,6 +24,7 @@ class TestTrain(unittest.TestCase):
 
 
         """
+        To bypass 'ModuleNotFoundError' on preprocessing module put the params and train.train above in comment and run the lines below as a unittest.
 
         params = {'TEST_SIZE' : 0.2,
                 'BATCH_SIZE' : 25,
