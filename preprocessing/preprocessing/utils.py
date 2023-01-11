@@ -8,6 +8,7 @@ class PreprocessingDataset:
 
     def __init__(self, sound_path : str, marks_path : str):
 
+        # Instantiate variables
         self.feature_list = []
         self.label_list = []
         self.matrix = None
@@ -19,6 +20,7 @@ class PreprocessingDataset:
         self.audio_path = sound_path
         self.marks_path = marks_path
 
+        # Run preprocessing
         self.get_mel_spectrogram()
         self.get_target()
 
@@ -37,7 +39,7 @@ class PreprocessingDataset:
         bad_sound = 0
         
         for file in tqdm(os.listdir(self.audio_path)):
-            # Skip if it's not a wav file
+            # Skip if it's not a .wav file
             if not file.endswith('.wav'):
                 continue
             
@@ -50,6 +52,7 @@ class PreprocessingDataset:
             mels = librosa.feature.melspectrogram(y=audio, sr=sr, n_fft=2048, hop_length=512)
             mels_db = librosa.power_to_db(S=mels, ref=1.0)
             
+            # Remove all spectrograms that are not (128,87) shape
             if mels_db.shape == (128,87):
                 feature_list.append(mels_db.reshape((128, 87, 1)))
                 filename = int(str(file)[:-4])
@@ -61,18 +64,18 @@ class PreprocessingDataset:
                 bad_label_list.append(filename)
         
         print(bad_sound, ' sounds removed.')
-            
+        
         self.feature_list = np.array(feature_list)
         self.label_list = np.array(label_list)
         self.bad_label_list = np.array(bad_label_list)
 
-
+        # Create and sort dictionary
         dataMel = pd.Series(dictMel)
         dataMel = dataMel.sort_index()
         self.listMel = dataMel.to_list()
         self.liste_son = dataMel.index.to_list()
 
-
+        # Creating X in a matrix shape, this will be the input of the model
         self.matrix = np.zeros(shape=(len(self.listMel),128, 87))
 
         for i in range(len(self.listMel)):
@@ -107,16 +110,20 @@ class PreprocessingDataset:
 
         full_df = pd.concat([sheet0, sheet1, sheet2, sheet3, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9], ignore_index=True)
 
+        # Creating targets : 1 -> audible, 0 -> not audible
         full_df["bool_audible"] = [1 if i > 0 else 0 for i in full_df.mediane]
 
+        # Rescale Median to be >= 0
         full_df = full_df.replace({'mediane':{-2:0, -1.5:0, -1:1, -0.5:1, 0:2, 0.5:3, 1:3, 1.5:3, 2:4}})
         full_df['mediane'] = pd.to_numeric(full_df['mediane'], downcast='integer')
-            
+        
+        # Modify files name
         full_df['filename'] = full_df['filename'].str.replace(r'-;$', '.wav')
         full_df['filename'] = full_df['filename'].str.replace(r'-$', '.wav')
         full_df['filename'] = full_df['filename'].map(lambda x: str(x)[1:])
         full_df['filename'] = full_df['filename'].str.replace('.wav', '',regex =True).astype(int)
 
+        # Remove rows corresponding to audio files deleted get_mel_spectrogram()
         full_df = full_df[full_df['filename'].isin(self.liste_son)]
 
         self.dataset = full_df

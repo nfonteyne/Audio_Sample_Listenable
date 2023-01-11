@@ -5,7 +5,7 @@ import numpy as np
 from preprocessing.preprocessing import utils
 
 """
-Run the following comand in a bash terminal at the root of the project to run tests : 
+Run the following command in a bash terminal at the root of the project to run tests : 
 
     python3 -m unittest discover --top-level-directory=. --start-directory=./preprocessing/tests/
 """
@@ -81,7 +81,11 @@ class TestPreprocessingDataset(unittest.TestCase):
         y = base.dataset['bool_audible']
         self.assertEqual(X.shape[0],y.shape[0])
 
+
     def test_y_shape(self):
+        """
+        Test if get_mel_spectrogram() targets return expected shape
+        """
         base = utils.PreprocessingDataset(sound_path='preprocessing/test_data/audio_files', marks_path='preprocessing/test_data/marks/test_marks.xlsx')
         y = base.dataset['bool_audible']
         expected = (18,)

@@ -5,10 +5,6 @@ import matplotlib.pylab as plt
 import os
 import time
 import json
-import sys
-import importlib.util
-
-sys.path.append('preprocessing/preprocessing')
 
 
 from preprocessing.preprocessing.utils import PreprocessingDataset
@@ -17,23 +13,26 @@ from tensorflow import keras
 
 def train(sound_path : str, marks_path : str, train_conf : dict, model_path : str):
     """
-    Train model
+    Train a Convolutional Neural Network model
+
+    The model will be saved at ./prediction_streamlit/models
     """
 
+    # Get preprocessed dataset
     preprocessed_data = PreprocessingDataset(sound_path=sound_path,
                                             marks_path=marks_path)
 
     X = preprocessed_data.matrix
     y = preprocessed_data.dataset[['bool_audible']]
-    print(len(y))
-    print(len(X))
 
+    # Split training and testing data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=train_conf['TEST_SIZE'], random_state=123)
 
     keras.backend.clear_session()
     np.random.seed(42)
     tf.random.set_seed(42)
 
+    # Instanciate the model
     model = keras.Sequential(layers=[
             keras.layers.InputLayer(input_shape=preprocessed_data.feature_list[0].shape),
             keras.layers.Conv2D(16, 3, padding='same', activation=keras.activations.relu),
@@ -46,13 +45,28 @@ def train(sound_path : str, marks_path : str, train_conf : dict, model_path : st
             keras.layers.Dense(1, activation=keras.activations.sigmoid)
         ])
     
+    # Compile model and display its summary in the terminal
     model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.binary_crossentropy, metrics=['accuracy'])
     print(model.summary())
 
-    # Train the model
+    # Create callbacks
     early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
+
+    # Train the model
     history = model.fit(x=X_train, y=y_train, validation_split=train_conf['TEST_SIZE'], epochs=train_conf['EPOCHS'], batch_size=train_conf['BATCH_SIZE'], callbacks=[early_stopping])
 
+
+    # Create folder artefacts_path
+    artefacts_path = os.path.join(model_path, time.strftime('%Y-%m-%d-%H-%M-%S'))
+    os.mkdir(artefacts_path)
+
+    # Save model in artefacts folder, name model.h5
+    model.save(artefacts_path)
+
+    # Save train_conf used in artefacts_path/params.json
+    with open(artefacts_path + "/params.json", "w") as outfile:
+        json.dump(train_conf, outfile)
+    
 
     # Plot loss and accuracy
     fig, axs = plt.subplots(2)
@@ -66,22 +80,12 @@ def train(sound_path : str, marks_path : str, train_conf : dict, model_path : st
     axs[1].legend(['accuracy', 'val_accuracy'])
     plt.show()
 
-    artefacts_path = os.path.join(model_path, time.strftime('%Y-%m-%d-%H-%M-%S'))
-
-    # create folder artefacts_path
-    os.mkdir(artefacts_path)
-
-    # save model in artefacts folder, name model.h5
-    model.save(artefacts_path)
-
-    # save train_conf used in artefacts_path/params.json
-    with open(artefacts_path + "/params.json", "w") as outfile:
-        json.dump(train_conf, outfile)
-
 if __name__ == "__main__":
 
+    # Instanciate hyperparameters
     params = {'TEST_SIZE' : 0.2,
             'BATCH_SIZE' : 25,
             'EPOCHS' : 20}
 
+    # Train model
     train(sound_path='train/training_data/audio', marks_path='train/training_data/marks/Notes_des_sons.xlsx', train_conf=params, model_path='prediction_streamlit/models')
