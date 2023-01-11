@@ -2,6 +2,9 @@ import pandas as pd
 import tensorflow as tf
 import numpy as np
 import matplotlib.pylab as plt
+import os
+import time
+import json
 
 from preprocessing.preprocessing.utils import PreprocessingDataset
 from sklearn.model_selection import train_test_split
@@ -9,17 +12,18 @@ from tensorflow import keras
 
 
 
-def train(sound_path : str, marks_path : str, test_size=0.2):
-
+def train(sound_path : str, marks_path : str, train_conf : dict):
+    """
+    Train model
+    """
 
     preprocessed_data = PreprocessingDataset(sound_path=sound_path,
                                             marks_path=marks_path)
 
     X = preprocessed_data.matrix
     y = preprocessed_data.dataset[['bool_audible']]
-    test_size = test_size
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=123)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=train_conf['TEST_SIZE'], random_state=123)
 
     keras.backend.clear_session()
     np.random.seed(42)
@@ -40,13 +44,9 @@ def train(sound_path : str, marks_path : str, test_size=0.2):
     model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.binary_crossentropy, metrics=['accuracy'])
     print(model.summary())
 
-    TEST_SIZE = 0.2
-    BATCH_SIZE = 25
-    EPOCHS = 20
-
     # Train the model
     early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
-    history = model.fit(x=X_train, y=y_train, validation_split=TEST_SIZE, epochs=EPOCHS, batch_size=BATCH_SIZE, callbacks=[early_stopping])
+    history = model.fit(x=X_train, y=y_train, validation_split=train_conf['TEST_SIZE'], epochs=train_conf['EPOCHS'], batch_size=train_conf['BATCH_SIZE'], callbacks=[early_stopping])
 
 
     # Plot loss and accuracy
@@ -60,3 +60,23 @@ def train(sound_path : str, marks_path : str, test_size=0.2):
     axs[1].set(title='Accuracy', xlabel='Epoch', ylabel='Accuracy')
     axs[1].legend(['accuracy', 'val_accuracy'])
     plt.show()
+
+    artefacts_path = os.path.join(model_path, time.strftime('%Y-%m-%d-%H-%M-%S'))
+
+    # create folder artefacts_path
+    os.mkdir(artefacts_path)
+
+    # save model in artefacts folder, name model.h5
+    model.save(artefacts_path)
+
+    # save train_conf used in artefacts_path/params.json
+    with open(artefacts_path + "/params.json", "w") as outfile:
+        json.dump(train_conf, outfile)
+
+if __name__ == "__main__":
+
+    params = {'TEST_SIZE' : 0.2,
+            'BATCH_SIZE' : 25,
+            'EPOCHS' : 20}
+
+    train(sound_path='train/training_data/audio', marks_path='train/training_data/marks/Notes_des_sons.xlsx', train_conf=params)
