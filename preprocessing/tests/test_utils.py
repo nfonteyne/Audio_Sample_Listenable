@@ -80,4 +80,10 @@ class TestPreprocessingDataset(unittest.TestCase):
         X = base.matrix
         y = base.dataset['bool_audible']
         self.assertEqual(X.shape[0],y.shape[0])
+
+    def test_y_shape(self):
+        base = utils.PreprocessingDataset(sound_path='preprocessing/test_data/audio_files', marks_path='preprocessing/test_data/marks/test_marks.xlsx')
+        y = base.dataset['bool_audible']
+        expected = (18,)
+        self.assertEqual(y.shape,expected)
     

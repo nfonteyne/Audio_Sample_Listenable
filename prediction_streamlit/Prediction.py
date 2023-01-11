@@ -15,7 +15,7 @@ def save_uploadedfile(uploadedfile): #Fonction appelée pour s'assurer du bon fo
     return st.success("Saved File:{} to Data".format(uploadedfile.name))
 
 def main():
-    model = keras.models.load_model('my_model') #Charger le modèle keras
+    model = keras.models.load_model('prediction_streamlit/models/2023-01-11-22-59-32') #Charger le modèle keras
     feature_list = [] #Création des listes utilisées pour la prediction
     Name_list=[]
 

@@ -13,6 +13,7 @@ class PreprocessingDataset:
         self.matrix = None
         self.listMel = []
         self.liste_son = []
+        self.bad_label_list = []
         self.dataset = pd.DataFrame()
 
         self.audio_path = sound_path
@@ -31,7 +32,9 @@ class PreprocessingDataset:
 
         feature_list = []
         label_list = []
+        bad_label_list = []
         dictMel = {}
+        bad_sound = 0
         
         for file in tqdm(os.listdir(self.audio_path)):
             # Skip if it's not a wav file
@@ -52,9 +55,16 @@ class PreprocessingDataset:
                 filename = int(str(file)[:-4])
                 label_list.append(filename)
                 dictMel[filename] = mels_db
+            else:
+                bad_sound += 1
+                filename = int(str(file)[:-4])
+                bad_label_list.append(filename)
+        
+        print(bad_sound, ' sounds removed.')
             
-            self.feature_list = np.array(feature_list)
-            self.label_list = np.array(label_list)
+        self.feature_list = np.array(feature_list)
+        self.label_list = np.array(label_list)
+        self.bad_label_list = np.array(bad_label_list)
 
 
         dataMel = pd.Series(dictMel)
@@ -96,7 +106,6 @@ class PreprocessingDataset:
         sheet9 = get_sheet(sheet_name='Sample 0009')
 
         full_df = pd.concat([sheet0, sheet1, sheet2, sheet3, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9], ignore_index=True)
-        
 
         full_df["bool_audible"] = [1 if i > 0 else 0 for i in full_df.mediane]
 
@@ -106,5 +115,8 @@ class PreprocessingDataset:
         full_df['filename'] = full_df['filename'].str.replace(r'-;$', '.wav')
         full_df['filename'] = full_df['filename'].str.replace(r'-$', '.wav')
         full_df['filename'] = full_df['filename'].map(lambda x: str(x)[1:])
+        full_df['filename'] = full_df['filename'].str.replace('.wav', '',regex =True).astype(int)
+
+        full_df = full_df[full_df['filename'].isin(self.liste_son)]
 
         self.dataset = full_df

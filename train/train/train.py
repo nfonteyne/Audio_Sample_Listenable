@@ -5,12 +5,15 @@ import matplotlib.pylab as plt
 import os
 import time
 import json
+import sys
+import importlib.util
+
+sys.path.append('preprocessing/preprocessing')
+
 
 from preprocessing.preprocessing.utils import PreprocessingDataset
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
-
-
 
 def train(sound_path : str, marks_path : str, train_conf : dict, model_path : str):
     """
@@ -22,6 +25,8 @@ def train(sound_path : str, marks_path : str, train_conf : dict, model_path : st
 
     X = preprocessed_data.matrix
     y = preprocessed_data.dataset[['bool_audible']]
+    print(len(y))
+    print(len(X))
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=train_conf['TEST_SIZE'], random_state=123)
 
