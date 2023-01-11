@@ -11,7 +11,9 @@ from tensorflow import keras
 
 def train(sound_path : str, marks_path : str,  metrics : str, test_size=0.2, separator=';'):
 
-    def get_data():
+    def excel_to_csv(file_path : str):
+
+        excel_path = file_path
 
         def get_sheet(file_path : str, sheet_name : str) -> pd.DataFrame():
             """
@@ -22,16 +24,16 @@ def train(sound_path : str, marks_path : str,  metrics : str, test_size=0.2, sep
             sheet.columns = ["filename", "mediane", 'moyenne']
             return sheet
         
-        sheet0 = get_sheet(file_path='fake', sheet_name='Sample 0000')
-        sheet1 = get_sheet(file_path='fake', sheet_name='Sample 0001')
-        sheet2 = get_sheet(file_path='fake', sheet_name='Sample 0002')
-        sheet3 = get_sheet(file_path='fake', sheet_name='Sample 0003')
-        sheet4 = get_sheet(file_path='fake', sheet_name='Sample 0004')
-        sheet5 = get_sheet(file_path='fake', sheet_name='Sample 0005')
-        sheet6 = get_sheet(file_path='fake', sheet_name='Sample 0006')
-        sheet7 = get_sheet(file_path='fake', sheet_name='Sample 0007')
-        sheet8 = get_sheet(file_path='fake', sheet_name='Sample 0008')
-        sheet9 = get_sheet(file_path='fake', sheet_name='Sample 0009')
+        sheet0 = get_sheet(file_path=excel_path, sheet_name='Sample 0000')
+        sheet1 = get_sheet(file_path=excel_path, sheet_name='Sample 0001')
+        sheet2 = get_sheet(file_path=excel_path, sheet_name='Sample 0002')
+        sheet3 = get_sheet(file_path=excel_path, sheet_name='Sample 0003')
+        sheet4 = get_sheet(file_path=excel_path, sheet_name='Sample 0004')
+        sheet5 = get_sheet(file_path=excel_path, sheet_name='Sample 0005')
+        sheet6 = get_sheet(file_path=excel_path, sheet_name='Sample 0006')
+        sheet7 = get_sheet(file_path=excel_path, sheet_name='Sample 0007')
+        sheet8 = get_sheet(file_path=excel_path, sheet_name='Sample 0008')
+        sheet9 = get_sheet(file_path=excel_path, sheet_name='Sample 0009')
 
         full_df = pd.concat([sheet0, sheet1, sheet2, sheet3, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9], ignore_index=True)
         
@@ -46,6 +48,7 @@ def train(sound_path : str, marks_path : str,  metrics : str, test_size=0.2, sep
 
         full_df.to_csv("Sample.csv", index=False)
 
+    excel_to_csv()
 
     preprocessed_data = PreprocessingDataset(sound_path=sound_path,
                                             marks_path=marks_path,
