@@ -6,10 +6,10 @@ from tqdm import tqdm
 
 class PreprocessingDataset:
 
-    def __init__(self, sound_path : str, marks_path : str, separator = ";"):
+    def __init__(self, sound_path : str, marks_path : str):
+
         self.feature_list = []
         self.label_list = []
-        self.dictMel = {}
         self.matrix = None
         self.listMel = []
         self.liste_son = []
@@ -17,7 +17,10 @@ class PreprocessingDataset:
 
         self.audio_path = sound_path
         self.marks_path = marks_path
-        self.separator = separator
+
+        self.get_mel_spectrogram()
+        self.get_target()
+
 
     def get_mel_spectrogram(self):
         """
@@ -28,6 +31,7 @@ class PreprocessingDataset:
 
         feature_list = []
         label_list = []
+        dictMel = {}
         
         for file in tqdm(os.listdir(self.audio_path)):
             # Skip if it's not a wav file
@@ -47,52 +51,60 @@ class PreprocessingDataset:
                 feature_list.append(mels_db.reshape((128, 87, 1)))
                 filename = int(str(file)[:-4])
                 label_list.append(filename)
-                self.dictMel[filename] = mels_db
+                dictMel[filename] = mels_db
             
             self.feature_list = np.array(feature_list)
             self.label_list = np.array(label_list)
 
 
-    def order_by_name(self):
-        """
-        Order data in a dictionary to align sound data to their labels
-        """
-        dataMel = pd.Series(self.dictMel)
+        dataMel = pd.Series(dictMel)
         dataMel = dataMel.sort_index()
         self.listMel = dataMel.to_list()
         self.liste_son = dataMel.index.to_list()
 
 
-    def list_to_matrix(self):
-        """
-        Arrange the list on a matrix shape
-        """
         self.matrix = np.zeros(shape=(len(self.listMel),128, 87))
+
         for i in range(len(self.listMel)):
             if self.listMel[i].shape == (128, 87):
-                self.matrix[i]=self.listMel[i]
+                self.matrix[i] = self.listMel[i]
 
 
     def get_target(self):
         """
-        Compute model's target
+        Get model's targets from excel file into a pandas dataframe
         """
-        ds = pd.read_csv(self.marks_path,sep=self.separator)
-        ds['nomSon'] = ds['nomSon'].str.replace(r"[-;]", '',regex =True).astype(int)
-        ds = ds[ds['nomSon'].isin(self.liste_son)]
-        ds['Moyenne'] = ds['Moyenne'].str.replace(',','.')
-        ds['Moyenne'] = ds['Moyenne'].astype(float)
-        ds.Moyenne = [0 if i<-1.2 else 1 if i<-0.4 else 2 if i<0.4 else 3 if i<1.2 else 4 for i in ds.Moyenne]
-        ds['MedianeBin'] = [0 if i<1 else 1 for i in ds.Mediane]
-        ds.Mediane = [0 if i==-2 else 1 if i==-1 else 2 if i==0 else 3 if i==1 else 4 for i in ds.Mediane]
-        self.dataset = ds     
 
+        def get_sheet(sheet_name : str, file_path = self.marks_path) -> pd.DataFrame:
+            """
+            Get excel sheet into a pandas dataframe and keeps only 'filename' and 'mediane' columns
+            """
+            sheet = pd.read_excel(file_path, sheet_name = sheet_name)
+            sheet = sheet[[sheet_name, "Médiane"]]
+            sheet.columns = ["filename", "mediane"]
+            return sheet
+        
+        sheet0 = get_sheet(sheet_name='Sample 0000')
+        sheet1 = get_sheet(sheet_name='Sample 0001')
+        sheet2 = get_sheet(sheet_name='Sample 0002')
+        sheet3 = get_sheet(sheet_name='Sample 0003')
+        sheet4 = get_sheet(sheet_name='Sample 0004')
+        sheet5 = get_sheet(sheet_name='Sample 0005')
+        sheet6 = get_sheet(sheet_name='Sample 0006')
+        sheet7 = get_sheet(sheet_name='Sample 0007')
+        sheet8 = get_sheet(sheet_name='Sample 0008')
+        sheet9 = get_sheet(sheet_name='Sample 0009')
 
-    def run(self):
-        """
-        Run preprocessing
-        """
-        self.get_mel_spectrogram()
-        self.order_by_name()
-        self.list_to_matrix()
-        self.get_target()
+        full_df = pd.concat([sheet0, sheet1, sheet2, sheet3, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9], ignore_index=True)
+        
+
+        full_df["bool_audible"] = [1 if i > 0 else 0 for i in full_df.mediane]
+
+        full_df = full_df.replace({'mediane':{-2:0, -1.5:0, -1:1, -0.5:1, 0:2, 0.5:3, 1:3, 1.5:3, 2:4}})
+        full_df['mediane'] = pd.to_numeric(full_df['mediane'], downcast='integer')
+            
+        full_df['filename'] = full_df['filename'].str.replace(r'-;$', '.wav')
+        full_df['filename'] = full_df['filename'].str.replace(r'-$', '.wav')
+        full_df['filename'] = full_df['filename'].map(lambda x: str(x)[1:])
+
+        self.dataset = full_df
