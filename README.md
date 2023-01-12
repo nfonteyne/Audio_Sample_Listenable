@@ -40,7 +40,7 @@ Unit tests can be implemented in `test_utils.py` in `./tests` folder
 
 Run unit tests with this bash command at the root of the project : 
 ```
-python3 -m unittest discover --top-level-directory=. --start-directory=./preprocessing/tests/
+$python3 -m unittest discover --top-level-directory=. --start-directory=./preprocessing/tests/
 ```
 
 Data required for tests can be found in `./test_data` 
@@ -71,7 +71,7 @@ Unit tests can be implemented in `test_train.py` in `/tests` folder.
 
 Run unit tests with this bash command at the root of the project :
 ```
-python3 -m unittest discover --top-level-directory=. --start-directory=./train/tests/
+$python3 -m unittest discover --top-level-directory=. --start-directory=./train/tests/
 ```
 
 **Disclaimer** : If you run the model with Visual Studio code : chances are that the program has dificulties to import 'preprocessing' module.
